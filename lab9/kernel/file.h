@@ -27,7 +27,7 @@ struct inode {
   short nlink;
   uint size;
   uint addrs[NDIRECT+2];
-
+  //增加target字段存放要链接的目标文件
   uint64 target;
 };
 

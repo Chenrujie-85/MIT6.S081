@@ -404,14 +404,14 @@ bmap(struct inode *ip, uint bn)
   }
 
   bn -=NINDIRECT;
-  //二级间接块同理，先依次申请一级间接块和二级间接块，最后再申请一个块真实存放数据
+  //二级间接块同理，先依次申请二级间接块和一级间接块，最后再申请一个块真实存放数据
   if(bn < NDINDIRECT) {
     if ((addr = ip->addrs[NDIRECT + 1]) == 0) {
       ip->addrs[NDIRECT + 1] = addr = balloc(ip->dev);
     }
     bp = bread(ip->dev, addr);
     a = (uint*)bp->data;
-    //表示为一级间接块中的第bn/NINDIRECT个二级间接块申请内存
+    //表示为二级间接块中的第bn/NINDIRECT个一级间接块申请内存
     if ((addr = a[bn / NINDIRECT]) == 0) {
       a[bn / NINDIRECT] = addr = balloc(ip->dev);
       log_write(bp);
@@ -419,7 +419,7 @@ bmap(struct inode *ip, uint bn)
     brelse(bp);
     bp = bread(ip->dev, addr);
     a = (uint*)bp->data;
-    //bn % NINDIRECT的余数表示二级间接块中对应的内存空间
+    //bn % NINDIRECT的余数表示一级间接块中对应的内存空间
     if ((addr = a[bn % NINDIRECT]) == 0) {
       a[bn % NINDIRECT] = addr = balloc(ip->dev);
       log_write(bp);
@@ -458,7 +458,7 @@ itrunc(struct inode *ip)
     bfree(ip->dev, ip->addrs[NDIRECT]);
     ip->addrs[NDIRECT] = 0;
   }
-  //释放三级块-》二级间接块-》一级间接块
+  //释放数据块-》一级间接块-》二级间接块
   if (ip->addrs[NDIRECT + 1]) {
     bp = bread(ip->dev, ip->addrs[NDIRECT + 1]);
     a = (uint*)bp->data;
