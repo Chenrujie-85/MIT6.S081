@@ -14,6 +14,7 @@ int main()
    2:	f406                	sd	ra,40(sp)
    4:	f022                	sd	s0,32(sp)
    6:	1800                	addi	s0,sp,48
+    // 创建两个管道，p1负责将数据从父传到子，p2相反
     int p1[2], p2[2];
     pipe(p1);
    8:	fe840513          	addi	a0,s0,-24
@@ -23,13 +24,16 @@ int main()
   14:	fe040513          	addi	a0,s0,-32
   18:	00000097          	auipc	ra,0x0
   1c:	358080e7          	jalr	856(ra) # 370 <pipe>
-    char buf[5];
+    // 创建一个缓冲区用来存储数据
+    char buf[1];
+    // 创建一个子进程
     int pid = fork();
   20:	00000097          	auipc	ra,0x0
   24:	338080e7          	jalr	824(ra) # 358 <fork>
-    if(pid == 0)
+    // 当pid == 0代表这是子进程，进入子进程的处理流程
+    if (pid == 0) {
   28:	e12d                	bnez	a0,8a <main+0x8a>
-    {
+        // 关闭管道p1的写段和p2的读端
         close(p1[1]);
   2a:	fec42503          	lw	a0,-20(s0)
   2e:	00000097          	auipc	ra,0x0
@@ -40,7 +44,7 @@ int main()
   3e:	34e080e7          	jalr	846(ra) # 388 <close>
 
         read(p1[0], buf, sizeof buf);
-  42:	4615                	li	a2,5
+  42:	4605                	li	a2,1
   44:	fd840593          	addi	a1,s0,-40
   48:	fe842503          	lw	a0,-24(s0)
   4c:	00000097          	auipc	ra,0x0
@@ -54,7 +58,7 @@ int main()
   66:	00000097          	auipc	ra,0x0
   6a:	672080e7          	jalr	1650(ra) # 6d8 <printf>
         write(p2[1], buf, sizeof buf);
-  6e:	4615                	li	a2,5
+  6e:	4605                	li	a2,1
   70:	fd840593          	addi	a1,s0,-40
   74:	fe442503          	lw	a0,-28(s0)
   78:	00000097          	auipc	ra,0x0
@@ -64,7 +68,8 @@ int main()
   82:	00000097          	auipc	ra,0x0
   86:	2de080e7          	jalr	734(ra) # 360 <exit>
     }
-    else{
+    else {
+        // 关闭p1的读端和p2的写端
         close(p1[0]);
   8a:	fe842503          	lw	a0,-24(s0)
   8e:	00000097          	auipc	ra,0x0
@@ -75,13 +80,13 @@ int main()
   9e:	2ee080e7          	jalr	750(ra) # 388 <close>
 
         write(p1[1], buf, sizeof buf);
-  a2:	4615                	li	a2,5
+  a2:	4605                	li	a2,1
   a4:	fd840593          	addi	a1,s0,-40
   a8:	fec42503          	lw	a0,-20(s0)
   ac:	00000097          	auipc	ra,0x0
   b0:	2d4080e7          	jalr	724(ra) # 380 <write>
         read(p2[0], buf, sizeof buf);
-  b4:	4615                	li	a2,5
+  b4:	4605                	li	a2,1
   b6:	fd840593          	addi	a1,s0,-40
   ba:	fe042503          	lw	a0,-32(s0)
   be:	00000097          	auipc	ra,0x0

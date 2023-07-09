@@ -20,6 +20,7 @@ int main(int argc, char *argv[])
         printf("error");
         exit(1);
     }
+    // argv[1]是传入main的第一个参数，表示sleep的睡眠时间
     sleep(atoi(argv[1]));
    e:	6588                	ld	a0,8(a1)
   10:	00000097          	auipc	ra,0x0

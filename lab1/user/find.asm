@@ -66,6 +66,7 @@ void find(char *curr_path, char *target) {
   int fd;
   struct dirent de;
   struct stat st;
+
   if ((fd = open(curr_path, 0)) < 0) {
   64:	4581                	li	a1,0
   66:	00000097          	auipc	ra,0x0
@@ -95,11 +96,13 @@ void find(char *curr_path, char *target) {
   94:	02e69f63          	bne	a3,a4,d2 <find+0x98>
 
   case T_FILE:
+    // 接收返回回来的最后一个目录，如curr_path是/home/user/ls.c，则返回user/ls.c
     f_name = basename(curr_path);
   98:	854a                	mv	a0,s2
   9a:	00000097          	auipc	ra,0x0
   9e:	f66080e7          	jalr	-154(ra) # 0 <basename>
     int match = 1;
+    // 如果文件名为空，或者文件名和target不一致，则说明没找到目标文件
     if (f_name == 0 || strcmp(f_name + 1, target) != 0) {
   a2:	c901                	beqz	a0,b2 <find+0x78>
   a4:	85d2                	mv	a1,s4
@@ -110,6 +113,7 @@ void find(char *curr_path, char *target) {
       match = 0;
     }
     if (match)
+      // 输出完整路径
       printf("%s\n", curr_path);
     close(fd);
   b2:	8526                	mv	a0,s1
@@ -124,7 +128,7 @@ void find(char *curr_path, char *target) {
   c8:	4509                	li	a0,2
   ca:	00000097          	auipc	ra,0x0
   ce:	72c080e7          	jalr	1836(ra) # 7f6 <fprintf>
-      find(buf, target); // recurse
+      find(buf, target); 
     }
     close(fd);
     break;
@@ -227,7 +231,7 @@ void find(char *curr_path, char *target) {
  1d0:	2c0080e7          	jalr	704(ra) # 48c <memcpy>
       p[DIRSIZ] = 0;
  1d4:	00098723          	sb	zero,14(s3)
-      find(buf, target); // recurse
+      find(buf, target); 
  1d8:	85d2                	mv	a1,s4
  1da:	dc040513          	addi	a0,s0,-576
  1de:	00000097          	auipc	ra,0x0
