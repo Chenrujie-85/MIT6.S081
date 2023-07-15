@@ -137,13 +137,19 @@ printfinit(void)
 void backtrace(void)
 {
   printf("backtrace:\n");
+  // 获取当前栈指针
   uint64 fp = r_fp();
+  // 获取当前栈的栈帧，为一个数组，frame[0]就是栈指针
   uint64 *frame = (uint64 *)fp;
+  // 获取栈的栈底和栈顶
   uint64 up = PGROUNDUP(fp);
   uint64 down = PGROUNDDOWN(fp);
+  // 根据实验指导书，返回地址位于栈帧帧指针的固定偏移(-8)位置，
+  // 并且保存的帧指针位于帧指针的固定偏移(-16)位置
   while(fp < up && fp > down)
   { 
     printf("%p\n", frame[-1]);
+    // 递归获取上一个栈帧的栈指针
     fp = frame[-2];
     frame = (uint64 *)fp;
   }

@@ -84,9 +84,13 @@ usertrap(void)
       p->ticks_cnt++;
       if(p->handler_exec == 0 && p->ticks_cnt > p->interval)
       {
+        // 执行处理函数后，时钟数清零
         p->ticks_cnt = 0;
+        // 保存现场
         *(p->tick_trapframe) = *(p->trapframe);
+        // 表示正在执行处理函数
         p->handler_exec = 1;
+        // 将处理函数放入进程的pc中
         p->trapframe->epc = p->handler;
       }
     }

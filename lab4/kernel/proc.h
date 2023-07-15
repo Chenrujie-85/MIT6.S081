@@ -106,10 +106,14 @@ struct proc {
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
 
+  // 间隔的时间
   int interval;
+  // 指向处理函数的调用
   uint64 handler;
+  // 经过的时钟数
   int ticks_cnt;
   uint64 tick_epc;
   struct trapframe *tick_trapframe;
+  // 处理函数是否正在执行
   int handler_exec;
 };

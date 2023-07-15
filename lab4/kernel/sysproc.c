@@ -70,6 +70,7 @@ sys_sleep(void)
     sleep(&ticks, &tickslock);
   }
   release(&tickslock);
+  // 调用backtrace()
   backtrace(); 
   return 0;
 }
@@ -103,10 +104,13 @@ uint64 sys_sigalarm(void)
   uint64 handler;
 
   struct proc *p;
+  // 接收用户空间传进来的报警间隔和处理函数
   if(argint(0, &interval)<0 || argaddr(1, &handler)<0) 
     return -1;
+  // 获取当前占用CPU的进程的proc
   p = myproc();
 
+  // 填充该进程的proc的相应字段
   p->interval = interval;
   p->handler = handler;
   p->ticks_cnt = 0;
