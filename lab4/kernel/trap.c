@@ -82,6 +82,7 @@ usertrap(void)
     if(p->interval > 0)
     {
       p->ticks_cnt++;
+      // 如果没有进入处理函数，且经过的时钟数已经超过了报警间隔，则执行逻辑
       if(p->handler_exec == 0 && p->ticks_cnt > p->interval)
       {
         // 执行处理函数后，时钟数清零

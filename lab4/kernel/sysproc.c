@@ -120,8 +120,11 @@ uint64 sys_sigalarm(void)
 
 uint64 sys_sigreturn(void)
 {
+  // 获取当前占用CPU的进程的proc
   struct proc *p = myproc();
+  // 恢复进程的现场
   *(p->trapframe) = *(p->tick_trapframe);
+  // 中断处理函数执行完毕
   p->handler_exec = 0;
   return 0;
 }
