@@ -33,6 +33,7 @@ struct context {
 struct thread {
   char       stack[STACK_SIZE]; /* the thread's stack */
   int        state;             /* FREE, RUNNING, RUNNABLE */
+  // 保存线程上下文
   struct context  threadContext;
 };
 struct thread all_thread[MAX_THREAD];
@@ -78,11 +79,8 @@ thread_schedule(void)
     next_thread->state = RUNNING;
     t = current_thread;
     current_thread = next_thread;
+    // 表示将线程t的上下文切换成线程current_thread的上下文
     thread_switch(&t->threadContext, &current_thread->threadContext);
-    /* YOUR CODE HERE
-     * Invoke thread_switch to switch from t to next_thread:
-     * thread_switch(??, ??);
-     */
   } else
     next_thread = 0;
 }
@@ -96,7 +94,9 @@ thread_create(void (*func)())
     if (t->state == FREE) break;
   }
   t->state = RUNNABLE;
+  // ra保存的是返回地址，也就是func的地址
   t->threadContext.ra = (uint64)func;
+  // sp保存的是栈指针
   t->threadContext.sp = (uint64)(t->stack) + STACK_SIZE;
 }
 

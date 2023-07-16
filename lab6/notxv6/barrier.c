@@ -30,12 +30,16 @@ barrier()
   // Block until all threads have called barrier() and
   // then increment bstate.round.
   //
+  // 获得的锁会在pthread_cond_wait中被释放
   pthread_mutex_lock(&bstate.barrier_mutex);
+  // 有一个线程完成条件，则满足条件的线程数+1
   bstate.nthread++;
+  // 如果此时线程数 < 参与线程数，则等待条件信号发出
   if(bstate.nthread < nthread)
   {
     pthread_cond_wait(&bstate.barrier_cond, &bstate.barrier_mutex);
   }
+  // 如果满足条件线程数 = 参与线程数，则轮数+1并且发出条件信号
   else if(bstate.nthread == nthread)
   {
     bstate.nthread = 0;
