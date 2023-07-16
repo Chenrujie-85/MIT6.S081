@@ -207,9 +207,10 @@ proc_pagetable(struct proc *p)
     return 0;
   }
 
-  // map the usycall just below TRAPFRAME
-  if(mappages(pagetable, USYSCALL, PGSIZE,
-              (uint64)(p->usyscall), PTE_R | PTE_U) < 0){
+  // 对共享空间进行映射
+  if (mappages(pagetable, USYSCALL, PGSIZE,
+              (uint64)(p->usyscall), PTE_R | PTE_U) < 0) {
+    // 如果映射失败，则将之前映射的空间释放
     uvmunmap(pagetable, TRAPFRAME, 1, 0);
     uvmunmap(pagetable, TRAMPOLINE, 1, 0);
     uvmfree(pagetable, 0);

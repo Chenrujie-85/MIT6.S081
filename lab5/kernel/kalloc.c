@@ -43,6 +43,7 @@ void
 kinit()
 {
   initlock(&kmem.lock, "kmem");
+  // 计算有多少页面需要被索引
   kmem.page_cnt = pagecnt(end, (void*)PHYSTOP);
   kmem.ref_page = end;
   for(int i = 0; i < kmem.page_cnt; ++i)
@@ -98,13 +99,14 @@ void
 kfree(void *pa)
 {
   int index = page_index((uint64)pa);
-  if(kmem.ref_page[index] > 1)
-  {
+  // 如果计数大于1则减1然后返回
+  if (kmem.ref_page[index] > 1) {
+    // 执行计数减1
     desc(pa);
     return ;
   }
-  if(kmem.ref_page[index] == 1)
-  {
+  // 如果最后一个使用该页面的也被释放了，则释放该页面
+  if (kmem.ref_page[index] == 1) {
     desc(pa);
   }
   struct run *r;

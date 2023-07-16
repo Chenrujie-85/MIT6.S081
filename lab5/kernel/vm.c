@@ -306,18 +306,23 @@ uvmcopy(pagetable_t old, pagetable_t new, uint64 sz)
   uint flags;
 
   for(i = 0; i < sz; i += PGSIZE){
-    if((pte = walk(old, i, 0)) == 0)//返回页表中对应的虚拟地址的页表项
+    // 返回页表中对应的虚拟地址的页表项
+    if((pte = walk(old, i, 0)) == 0)
       panic("uvmcopy: pte should exist");
     if((*pte & PTE_V) == 0)
       panic("uvmcopy: page not present");
-    pa = PTE2PA(*pte);//获取页表项对应的物理地址 
+    // 获取页表项对应的物理地址   
+    pa = PTE2PA(*pte);
+    // 清除pte的写权限
     *pte &= ~PTE_W;
+    // 令pte的cow标志位置为1
     *pte |= PTE_COW;
     flags = PTE_FLAGS(*pte);
     // if((mem = kalloc()) == 0)//分配物理页面
     //   goto err;
     // memmove(mem, (char*)pa, PGSIZE);//把src的内容复制到dst上
-    if(mappages(new, i, PGSIZE, (uint64)pa, flags) != 0){
+    // 将子进程的页面映射到父进程的物理地址上
+    if (mappages(new, i, PGSIZE, (uint64)pa, flags) != 0) {
       goto err;
     }
     incr((void *)pa);
@@ -352,10 +357,9 @@ copyout(pagetable_t pagetable, uint64 dstva, char *src, uint64 len)
 
   while(len > 0){
     va0 = PGROUNDDOWN(dstva);
-    if(is_cow_fault(pagetable, va0))
-    {
-      if(cow_alloc(pagetable, va0) < 0)
-      {
+    // 判断是否需要写时复制
+    if (is_cow_fault(pagetable, va0)) {
+      if(cow_alloc(pagetable, va0) < 0) {
         printf("copyout: cow_alloc fail!\n");
         return -1;
       }
@@ -445,6 +449,7 @@ copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
 
 int is_cow_fault(pagetable_t pagetable, uint64 va)
 {
+  // 根据标志位判断当前页表项是否符合条件
   va = PGROUNDDOWN(va);
   pte_t *pte = walk(pagetable, va, 0);
   if(pte == 0)
@@ -463,19 +468,25 @@ int cow_alloc(pagetable_t pagetable, uint64 va)
   va = PGROUNDDOWN(va); 
   pte_t *pte;
   char *mem;
-  if((pte = walk(pagetable, va, 0)) == 0)//返回页表中对应的虚拟地址的页表项
-      panic("uvmcopy: pte should exist");
+  // 返回页表中对应的虚拟地址的页表项
+  if ((pte = walk(pagetable, va, 0)) == 0) {
+    panic("uvmcopy: pte should exist");
+  }
   uint64 pa = PTE2PA(*pte);
 
   uint flags = PTE_FLAGS(*pte);
   flags &= ~(PTE_COW);
   flags |= PTE_W;
 
-  if((mem = kalloc()) == 0)//分配物理页面
+  // 分配物理页面
+  if ((mem = kalloc()) == 0) {
     goto err;
-  memmove(mem, (char*)pa, PGSIZE);//把src的内容复制到dst上
+  }
+  // 把src的内容复制到dst上
+  memmove(mem, (char*)pa, PGSIZE);
+  // 先解除映射关系
   uvmunmap(pagetable, va, 1, 1);
-  if(mappages(pagetable, va, PGSIZE, (uint64)mem, flags) != 0){
+  if (mappages(pagetable, va, PGSIZE, (uint64)mem, flags) != 0) {
     kfree(mem);
     goto err;
   }

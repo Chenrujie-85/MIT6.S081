@@ -263,22 +263,25 @@ uvmdealloc(pagetable_t pagetable, uint64 oldsz, uint64 newsz)
 
 void vmprint_level(pagetable_t pagetable, int depth)
 {
+  // 根据当前深度填充打印出来的内容
   static char* pre[] = {
       "",
       "..",
       ".. ..",
       ".. .. .."
   };
+  // 如果深度过小或过大直接打印错误
   if (depth <= 0 || depth >= 4) {
     panic("vmprint_helper: depth not in {1, 2, 3}");
   }
-  for(int i = 0; i < 512; i++){
+  for (int i = 0; i < 512; i++) {
+    // pte表示页表pagetable的第i个页表项
     pte_t pte = pagetable[i];
-    if(pte & PTE_V)
-    {
+    // 如果页面有效
+    if (pte & PTE_V) {
       printf("%s%d: pte %p pa %p\n", pre[depth], i, pte, PTE2PA(pte));
-       if ((pte & (PTE_R|PTE_W|PTE_X)) == 0)
-      {
+      // 如果页面还有下一层索引
+       if ((pte & (PTE_R|PTE_W|PTE_X)) == 0) {
         uint64 child = PTE2PA(pte);
         vmprint_level((pagetable_t)child, depth+1);
       }
@@ -288,7 +291,9 @@ void vmprint_level(pagetable_t pagetable, int depth)
 
 void vmprint(pagetable_t pagetable)
 {
+  // 使用%p打印16进制的pte和地址
   printf("page table %p\n", pagetable);
+  // 实际打印页表的函数
   vmprint_level(pagetable, 1);
 }
 
@@ -308,7 +313,7 @@ freewalk(pagetable_t pagetable)
     } else if(pte & PTE_V){
       panic("freewalk: leaf");
     }
-  }
+}
   kfree((void*)pagetable);
 }
 
@@ -470,12 +475,14 @@ int vm_pgaccess(pagetable_t pagetable, uint64 va)
 
   if(va >= MAXVA)
     return 0;
-
+  // walk()为实验指导书中提供的函数，可以返回当前页面的pte
   pte = walk(pagetable, va, 0);
-  if(pte == 0)
+  if (pte == 0) {
     return 0;
-  if((*pte & PTE_A) != 0)
-  {
+  }
+  
+  if ((*pte & PTE_A) != 0) {
+    // 如果当前页面被访问过则将PTE_A复位
     *pte = *pte & (~PTE_A);
     return 1;
   }

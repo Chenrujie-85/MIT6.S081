@@ -68,19 +68,19 @@ usertrap(void)
   } else if((which_dev = devintr()) != 0){
     // ok
   } 
-  else if(r_scause() == 15 || r_scause() == 13)
-  {
+  // 如果发生了写中断时触发内存分配 
+  else if (r_scause() == 15) {
+    // 获取导致中断发生的页面地址
     uint64 va = r_stval();
-    if(is_cow_fault(p->pagetable, va))
-    {
-      if(cow_alloc(p->pagetable, va) < 0)
-      {
+    // 判断是否需要写时复制
+    if (is_cow_fault(p->pagetable, va)) {
+      // 对页面进行分配
+      if (cow_alloc(p->pagetable, va) < 0) {
         printf("usertrap(): cow_alloc failed!");
         p->killed = 1;
       }
     }
-    else
-    {
+    else {
       printf("usertrap(): unexpected scause %p pid=%d\n", r_scause(), p->pid);
       printf("            sepc=%p stval=%p\n", r_sepc(), r_stval());
       p->killed = 1;
